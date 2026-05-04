@@ -116,7 +116,7 @@ SESSION_LOCATION = None
 STREAM = True
 User="Sean-san"
 Audio_stream=False
-maidchan_mode = "streamer"
+maidchan_mode = "normal"
 searchfunc=True
 testlog=True
 
