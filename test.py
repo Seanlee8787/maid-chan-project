@@ -1,12 +1,13 @@
 # test.py
 import warnings
+import os
 from dotenv import load_dotenv
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 load_dotenv()
 apikey = os.getenv("API_KEY")
 
-import os
+
 import re
 import shlex
 import shutil
