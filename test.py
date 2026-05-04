@@ -2084,7 +2084,7 @@ def main_loop():
     
 
     console.print(f"[pale_violet_red1]Maid-Chan:[/pale_violet_red1] I'm ready! {time_since}")
-    if user_name="":
+    if user_name=="":
         user_name=input("What's your name, this will be how maid chan going to address you in the conversations.")
 
     while True:
