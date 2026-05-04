@@ -38,12 +38,19 @@ from module.wiki import WikiSummarizer, WikiModuleError
 import parsedatetime as pdt
 import ast
 import traceback
-import sounddevice as sd
+
 import soundfile as sf
 import simpleaudio as sa
 import shutil
 from module.memory import MaidMemoryTest
 
+try:
+    import sounddevice as sd
+    import numpy as np
+    AUDIO_MODE = True
+except OSError:
+    print("⚠️ No speakers found! Switching to Text-Only mode.")
+    AUDIO_MODE = False
 
 maid_brain = MaidMemoryTest(debug=True,detail=False)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -215,12 +222,16 @@ def audio_worker():
         filename = audio_queue.get()
         if filename is None:  # sentinel to stop the thread
             break
+         
         
         try:
+         if AUDIO_MODE:
             data, samplerate = sf.read(filename, dtype='float32')
             # Play the WAV file
             sd.play(data,samplerate)
             sd.wait()
+         else:
+          print("Audio skipped")
         except Exception as e:
             print(f"Error playing audio {filename}: {e}")
         finally:
