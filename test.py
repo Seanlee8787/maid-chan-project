@@ -1106,14 +1106,19 @@ def classify_input(user_input: str) -> str:
     
 
 
-
+os.makedirs('memory', exist_ok=True)
 def update_mood_variables(current_statsnow, user_input, mode):
     global current_stats
 
     # 1. Load the specific prompt config for the current mode
-    with open('memory/mood_configs.json', 'r') as f:
-        configs = json.load(f)
-    
+    try:
+        with open('memory/mood_configs.json', 'r') as f:
+            configs = json.load(f)
+    except:
+        with open('memory/mood_configs.json', 'w') as f:
+            default_mood = {"pleasure": 0, "energy": 0, "confidence": 0, "mood": "neutral"}
+            json.dump(default_mood, f, indent=4)
+            configs = {"pleasure": 0, "energy": 0, "confidence": 0, "mood": "neutral"}
     # Fallback to 'normal' if mode is unknown
     mode_config = configs.get(mode, configs["normal"])
 
