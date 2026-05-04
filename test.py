@@ -40,7 +40,7 @@ import ast
 import traceback
 
 import soundfile as sf
-import simpleaudio as sa
+
 import shutil
 from module.memory import MaidMemoryTest
 
