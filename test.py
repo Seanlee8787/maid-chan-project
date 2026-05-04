@@ -1110,24 +1110,42 @@ os.makedirs('memory', exist_ok=True)
 def update_mood_variables(current_statsnow, user_input, mode):
     global current_stats
 
-    # 1. Load the specific prompt config for the current mode
+    # 1. Ensure directory exists and Load/Create config
+    os.makedirs('memory', exist_ok=True)
+    path = 'memory/mood_configs.json'
+    
+    # Define a robust default structure so the prompt builder doesn't crash
+    default_structure = {
+        "neutral": {
+            "logic": "Maintain a balanced and helpful personality.",
+            "mood_suggestions": ["calm", "attentive", "steady"],
+            "pleasure": 0, "energy": 0, "confidence": 0
+        },
+        "mood": "neutral" # Fallback key
+    }
+
     try:
-        with open('memory/mood_configs.json', 'r') as f:
-            configs = json.load(f)
-    except:
-        with open('memory/mood_configs.json', 'w') as f:
-            default_mood = {"pleasure": 0, "energy": 0, "confidence": 0, "mood": "neutral"}
-            json.dump(default_mood, f, indent=4)
-            configs = {"pleasure": 0, "energy": 0, "confidence": 0, "mood": "neutral"}
-    # Fallback to 'normal' if mode is unknown
-    mode_config = configs.get(mode, configs["normal"])
+        if not os.path.exists(path):
+            with open(path, 'w') as f:
+                json.dump(default_structure, f, indent=4)
+            configs = default_structure
+        else:
+            with open(path, 'r') as f:
+                configs = json.load(f)
+    except Exception as e:
+        print(f"Error loading config: {e}")
+        configs = default_structure
+
+    # Fallback logic: Try to get the mode, then fallback to 'neutral', then fallback to first key
+    mode_config = configs.get(mode, configs.get("neutral", list(configs.values())[0]))
 
     # 2. Build the dynamic prompt
+    # Using .get() with defaults inside the f-string prevents crashes if keys are missing
     prompt = f"""SYSTEM: Update PAD variables (-10 to 10) for Persona: Maid-Chan.
     
     MODE: {mode.upper()}
-    GOAL: {mode_config['logic']}
-    SUGGESTED MOODS: {", ".join(mode_config['mood_suggestions'])}
+    GOAL: {mode_config.get('logic', 'Be a loyal maid.')}
+    SUGGESTED MOODS: {", ".join(mode_config.get('mood_suggestions', ['loyal']))}
 
     CURRENT STATE:
     {current_statsnow}
@@ -1145,23 +1163,31 @@ def update_mood_variables(current_statsnow, user_input, mode):
     }}
     """
 
-    # 3. Call Ollama (Fixed to 0 temperature for reliability)
-    response = ollama.generate(
-        model="qwen2.5:3b-instruct", 
-        prompt=prompt,
-        options={"temperature": 0},
-        format="json"
-    )
+    # 3. Call Ollama
+    try:
+        response = ollama.generate(
+            model="qwen2.5:3b-instruct", 
+            prompt=prompt,
+            options={"temperature": 0},
+            format="json"
+        )
 
-    # 4. Parse and Update Globals
-    data = json.loads(response["response"].strip())
-    pleasure = data.get("pleasure")
-    energy = data.get("energy")
-    confidence = data.get("confidence")
-    mood = data.get("possible_mood")
-    current_stats={"pleasure": pleasure, "energy": energy, "confidence": confidence, "mood": mood}
-    if DEBUG:
-        debug(f"Updated Mood Variables: {current_stats}")
+        # 4. Parse and Update Globals
+        data = json.loads(response["response"].strip())
+        
+        # Update the global dictionary directly
+        current_stats.update({
+            "pleasure": data.get("pleasure", 0),
+            "energy": data.get("energy", 0),
+            "confidence": data.get("confidence", 0),
+            "mood": data.get("possible_mood", "neutral")
+        })
+
+        if DEBUG:
+            print(f"Updated Mood Variables: {current_stats}")
+            
+    except Exception as e:
+        print(f"Failed to update mood: {e}")
 
 def identify_mood(maid_reply: str):
     prompt="""System: you are a mood idnetifyer. You will be given a text input and you need to identify the mood of the text.
