@@ -109,7 +109,7 @@ CHAT_MODEL = "maid-chan-normal:latest"
 LOGIC_MODEL = "qwen2.5:3b-instruct"
 os.environ["OLLAMA_KEEP_ALIVE"] = "-1"
 
-DEBUG = True
+DEBUG = False
 DETAILED_MODE = False
 ENABLE_TTS = False
 SESSION_LOCATION = None
